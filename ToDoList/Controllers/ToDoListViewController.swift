@@ -94,9 +94,9 @@ class ToDoListViewController: UITableViewController {
         
     }
     
-    func loadData(){
+    func loadData(with request :NSFetchRequest<Item> = Item.fetchRequest()  ){
         
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+      
         do{
             toDoList = try context.fetch(request)
         }catch{
@@ -122,27 +122,30 @@ class ToDoListViewController: UITableViewController {
 }
 
 extension ToDoListViewController: UISearchBarDelegate{
+  
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@",searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+     
+       
+        loadData(with: request)
 
-        do{
-            
-            let  predicate = NSPredicate(format: "title CONTAINS %@",searchBar.text!)
-            request.predicate = predicate
-            try toDoList =  context.fetch(request)
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-          
-            loadData()
-
-        }catch{
-            print("Error occured  : \(error)")
-            
-        }
+      
     }
     
     
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            
+            loadData()
+               DispatchQueue.main.async {
+                        searchBar.resignFirstResponder()
+               }
+        }
+    }
 }
 
